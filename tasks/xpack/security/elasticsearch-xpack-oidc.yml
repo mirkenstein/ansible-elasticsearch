@@ -1,0 +1,42 @@
+---
+
+- name: Set keystore password
+  become: yes
+  shell: echo "{{ es_oidc1_rp_client_secret }}" | {{ es_home }}/bin/elasticsearch-keystore add -x -f 'xpack.security.authc.realms.oidc.{{ item }}.rp.client_secret'
+  no_log: false
+  when: es_oidc1_rp_client_secret and es_enable_oidc
+  with_items:
+    - oidc1
+
+
+- name: Upload SSL Certificate Authority
+  become: yes
+  copy:
+    src: "{{ es_ssl_certificate_authority }}"
+    dest: "{{ es_ssl_certificate_path }}/{{ es_ssl_certificate_authority | basename }}"
+    owner: "{{ es_user }}"
+    group: "{{ es_group }}"
+    mode: "640"
+  #Restart if this changes
+  notify: restart elasticsearch
+  when: (es_ssl_certificate_authority is defined) and (es_ssl_certificate_authority|length > 0)
+- name: Insert/Update elasticsearch config
+  blockinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    block: |
+      xpack.security.authc.token.enabled: true
+      xpack.security.authc.realms.oidc.oidc1.order: 0
+      xpack.security.authc.realms.oidc.oidc1.rp.client_id: "{{oidc1_rp_client_id}}"
+      xpack.security.authc.realms.oidc.oidc1.rp.response_type: code
+      xpack.security.authc.realms.oidc.oidc1.rp.redirect_uri: "{{oidc1_rp_redirect_uri}}"
+      xpack.security.authc.realms.oidc.oidc1.op.issuer: "{{oidc1_op_issuer}}"
+      xpack.security.authc.realms.oidc.oidc1.op.authorization_endpoint: "{{oidc1_op_userinfo_endpoint}}"
+      xpack.security.authc.realms.oidc.oidc1.op.token_endpoint: "{{oidc1_op_token_endpoint}}"
+      xpack.security.authc.realms.oidc.oidc1.op.jwkset_path: "{{oidc1_op_jwkset_path}}"
+      xpack.security.authc.realms.oidc.oidc1.op.userinfo_endpoint: "{{oidc1_op_userinfo_endpoint}}"
+      xpack.security.authc.realms.oidc.oidc1.rp.post_logout_redirect_uri: "{{oidc1_rp_post_logout_redirect_uri}}"
+      xpack.security.authc.realms.oidc.oidc1.claims.principal: sub
+      xpack.security.authc.realms.oidc.oidc1.rp.requested_scopes: groups
+      xpack.security.authc.realms.oidc.oidc1.claim_patterns.principal: "(.*)"
+  notify: restart elasticsearch
+  become: true
