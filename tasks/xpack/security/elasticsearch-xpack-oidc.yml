@@ -1,6 +1,6 @@
 ---
 
-- name: Set keystore password
+- name: Set rp client secret
   become: yes
   shell: echo "{{ es_oidc1_rp_client_secret }}" | {{ es_home }}/bin/elasticsearch-keystore add -x -f 'xpack.security.authc.realms.oidc.{{ item }}.rp.client_secret'
   no_log: false
@@ -8,18 +8,18 @@
   with_items:
     - oidc1
 
-
-- name: Upload SSL Certificate Authority
-  become: yes
-  copy:
-    src: "{{ es_ssl_certificate_authority }}"
-    dest: "{{ es_ssl_certificate_path }}/{{ es_ssl_certificate_authority | basename }}"
-    owner: "{{ es_user }}"
-    group: "{{ es_group }}"
-    mode: "640"
-  #Restart if this changes
-  notify: restart elasticsearch
-  when: (es_ssl_certificate_authority is defined) and (es_ssl_certificate_authority|length > 0)
+#
+#- name: Upload SSL Certificate Authority
+#  become: yes
+#  copy:
+#    src: "{{ es_ssl_certificate_authority }}"
+#    dest: "{{ es_ssl_certificate_path }}/{{ es_ssl_certificate_authority | basename }}"
+#    owner: "{{ es_user }}"
+#    group: "{{ es_group }}"
+#    mode: "640"
+#  #Restart if this changes
+#  notify: restart elasticsearch
+#  when: (es_ssl_certificate_authority is defined) and (es_ssl_certificate_authority|length > 0)
 - name: Insert/Update elasticsearch config
   blockinfile:
     path: /etc/elasticsearch/elasticsearch.yml
