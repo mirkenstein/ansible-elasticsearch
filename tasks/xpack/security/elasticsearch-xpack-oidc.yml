@@ -1,6 +1,6 @@
 ---
 
-- name: Set keystore password
+- name: Set rp client secret
   become: yes
   shell: echo "{{ es_oidc1_rp_client_secret }}" | {{ es_home }}/bin/elasticsearch-keystore add -x -f 'xpack.security.authc.realms.oidc.{{ item }}.rp.client_secret'
   no_log: false
@@ -30,7 +30,7 @@
       xpack.security.authc.realms.oidc.oidc1.rp.response_type: code
       xpack.security.authc.realms.oidc.oidc1.rp.redirect_uri: "{{oidc1_rp_redirect_uri}}"
       xpack.security.authc.realms.oidc.oidc1.op.issuer: "{{oidc1_op_issuer}}"
-      xpack.security.authc.realms.oidc.oidc1.op.authorization_endpoint: "{{oidc1_op_userinfo_endpoint}}"
+      xpack.security.authc.realms.oidc.oidc1.op.authorization_endpoint: "{{oidc1_op_authorization_endpoint}}"
       xpack.security.authc.realms.oidc.oidc1.op.token_endpoint: "{{oidc1_op_token_endpoint}}"
       xpack.security.authc.realms.oidc.oidc1.op.jwkset_path: "{{oidc1_op_jwkset_path}}"
       xpack.security.authc.realms.oidc.oidc1.op.userinfo_endpoint: "{{oidc1_op_userinfo_endpoint}}"
@@ -40,3 +40,4 @@
       xpack.security.authc.realms.oidc.oidc1.claim_patterns.principal: "(.*)"
   notify: restart elasticsearch
   become: true
+
